@@ -1,0 +1,40 @@
+version: "3"
+
+services:
+  traefik:
+    image: traefik:v2.4
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    command:
+      - --providers.docker
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      # redirect http => https
+      # - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      # - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      - --providers.file.directory=/traefik/dynamic
+      - --providers.file.watch=true
+      - --api.insecure=true
+      - --log.level=DEBUG
+    # labels:
+    #   - "traefik.enable=false"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/dynamic:/traefik/dynamic:ro
+
+  traefik-local-routing-helper:
+    image: alpine
+    entrypoint: "sh"
+    command: create-local-route.sh
+    working_dir: /local-routing-helper
+    environment:
+      - LOCAL_SERVICE_NAME=local-http
+      - LOCAL_SERVICE_PORT=4200
+      - LOCAL_SERVICE_ENTRYPOINT=web
+      - LOCAL_SERVICE_ROUTER_RULE=Host(`web.stack.localhost`)
+    volumes:
+      - ./traefik/local-routing-helper:/local-routing-helper
+      - ./traefik/dynamic:/local-routing-helper/config

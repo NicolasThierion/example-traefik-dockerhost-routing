@@ -1,0 +1,10 @@
+[http.routers]
+  [http.routers.${LOCAL_SERVICE_NAME:-local-service}]
+    entryPoints = ["${LOCAL_SERVICE_ENTRYPOINT:-web}"]
+    rule = "${LOCAL_SERVICE_ROUTER_RULE}"
+    service = "${LOCAL_SERVICE_NAME:-local-service}"
+      
+[http.services]
+  [http.services.${LOCAL_SERVICE_NAME:-local-service}.loadBalancer]
+    [[http.services.${LOCAL_SERVICE_NAME:-local-service}.loadBalancer.servers]]
+      url = "${LOCAL_SERVICE_PROTOCOL:-http}://${DOCKER_GATEWAY_ADDRESS}:${LOCAL_SERVICE_PORT:-80}"
